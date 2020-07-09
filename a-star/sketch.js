@@ -1,14 +1,18 @@
 'use strict';
 
+// Depends on minpq.js
+
 var globals = {
    rows: 50,
    cols: 50,
    width: 400,
    height: 400,
+   density: 0.3,
    grid: {},
    start: undefined,
    goal: undefined,
-   openSet: [] // TODO: Priority queue?
+   // openSet: [] // TODO: Priority queue?
+   openSet: new MinPq()
 };
 
 var Cell = function(i, j) {
@@ -92,7 +96,6 @@ var Cell = function(i, j) {
    this.drawPathFromStart = function() {
       let curr = this;
       while (curr != undefined) {
-         // curr.draw(color(200, 50, 250));
          curr.draw(color(0, 0, 250));
          curr = curr.cameFrom;
       }
@@ -113,7 +116,7 @@ function setup() {
       globals.grid[i] = new Array(globals.rows);
       for (let j = 0;j < globals.rows;j++) {
          globals.grid[i][j] = new Cell(i, j);
-         if (Math.random() < 0.3) {
+         if (Math.random() < globals.density) {
             globals.grid[i][j].setWall(true);
          }
       }
@@ -127,7 +130,9 @@ function setup() {
    globals.start.updateHScore();
    globals.start.updateFScore();
 
-   globals.openSet.push(globals.start);
+   globals.openSet.insert(
+      new Pair(globals.start.fScore, globals.start)
+   );
 
    noStroke();
 }
@@ -139,25 +144,24 @@ function draw() {
       }
    }
 
-   if (globals.openSet.length === 0) {
+   if (globals.openSet.size() === 0) {
       console.log("Terminating. No more paths to check");
       noLoop();
       return;
    }
 
-   globals.openSet.forEach((e) => {
-      e.draw(color(255,204,0, 60));
+   let els = globals.openSet.getElements();
+   els.forEach(e => {
+      e.getValue().draw(color(255,204,0, 60));
    });
 
-   let minIdx = findMinFScoreElemIndex(globals.openSet);
-   if (globals.openSet[minIdx] === globals.goal) {
+   let minElement = globals.openSet.deleteMin().getValue();
+   if (minElement === globals.goal) {
       console.log("Terminating. Found path");
-      globals.openSet[minIdx].drawPathFromStart();
+      minElement.drawPathFromStart();
       noLoop();
       return;
    }
-
-   let minElement = removeElement(globals.openSet, minIdx);
 
    let neighbors = minElement.neighbors();
    neighbors.forEach(function (e) {
@@ -169,36 +173,10 @@ function draw() {
          e.updateHScore();
          e.updateFScore();
 
-         if(!member(e, globals.openSet)) {
-            globals.openSet.push(e);
+         if(!globals.openSet.hasValue(e)) {
+            globals.openSet.insert(new Pair(e.fScore, e));
             e.drawPathFromStart();
          }
       }
    });
-}
-
-function findMinFScoreElemIndex(elements) {
-   let minFScore = Infinity;
-   let idx = -1;
-   for (let i = 0; i < elements.length; i++) {
-      if (elements[i].fScore < minFScore) {
-         minFScore = elements[i].fScore;
-         idx = i;
-      }
-   }
-   if (idx === -1) {
-      console.error("failed to find min element in array: ", elements);
-   }
-   return idx;
-}
-
-function removeElement(elements, idx) {
-   let res = elements[idx];
-   elements.splice(idx, 1);
-   return res;
-}
-
-function member(x, xs) {
-   for (let i = 0; i < xs.length; i++) if (xs[i] === x) return true;
-   return false;
 }
