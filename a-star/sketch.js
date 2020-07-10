@@ -35,10 +35,16 @@ var Cell = function(i, j) {
 
    this.draw = function(col) {
       let c = this.isWall ? 120 : 250;
-      if (this.isStart || this.isGoal) c = 0;
+      let radius = (rectWidth + rectHeight) / 3;
+      if (this.isStart || this.isGoal) {
+         radius = (rectWidth + rectHeight) / 2;
+         c = 0;
+      }
       if (col == undefined) fill(c);
       else fill(col);
-      rect(this.i*rectWidth, this.j*rectHeight, rectWidth-1, rectHeight-1);
+      ellipse(this.i*rectWidth + rectWidth / 2,
+              this.j*rectHeight + rectHeight / 2,
+              radius, radius);
    }
 
    this.setGScore = function(n) {
@@ -93,10 +99,17 @@ var Cell = function(i, j) {
 
    this.drawPathFromStart = function() {
       let curr = this;
+      noFill();
+      stroke(0, 0, 250);
+      strokeWeight(3);
+      beginShape();
       while (curr != undefined) {
-         curr.draw(color(0, 0, 250));
+         vertex(curr.i * rectWidth + rectWidth / 2,
+                curr.j * rectHeight + rectHeight / 2);
          curr = curr.cameFrom;
       }
+      endShape();
+      noStroke();
    }
 }
 
@@ -140,6 +153,7 @@ function setup() {
 }
 
 function draw() {
+   background(255);
    for (let i = 0; i < globals.cols; i++) {
       for (let j = 0; j < globals.rows; j++) {
          globals.grid[i][j].draw();
@@ -152,10 +166,11 @@ function draw() {
       return;
    }
 
-   let els = globals.openSet.getElements();
-   for (let i = 0; i < els.length; i++) {
-      els[i].getValue().draw(color(255,204,0));
-   }
+   // Draw openSet
+   // let els = globals.openSet.getElements();
+   // for (let i = 0; i < els.length; i++) {
+   //    els[i].getValue().draw(color(255,204,0));
+   // }
 
    let minElement = globals.openSet.deleteMin().getValue();
    if (minElement === globals.goal) {
@@ -178,8 +193,8 @@ function draw() {
 
          if(!globals.openSet.hasValue(e)) {
             globals.openSet.insert(new Pair(e.fScore, e));
-            e.drawPathFromStart();
          }
       }
    }
+   minElement.drawPathFromStart();
 }
