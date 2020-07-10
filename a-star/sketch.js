@@ -38,13 +38,13 @@ var Cell = function(i, j) {
       let radius = (rectWidth + rectHeight) / 3;
       if (this.isStart || this.isGoal) {
          radius = (rectWidth + rectHeight) / 2;
-         c = 0;
+         c = color(120, 200, 200);
       }
       if (col == undefined) fill(c);
       else fill(col);
-      ellipse(this.i*rectWidth + rectWidth / 2,
-              this.j*rectHeight + rectHeight / 2,
-              radius, radius);
+      rect(this.i*rectWidth,
+              this.j*rectHeight,
+              rectWidth, rectHeight);
    }
 
    this.setGScore = function(n) {
