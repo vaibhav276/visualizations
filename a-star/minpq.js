@@ -3,7 +3,7 @@ let Pair = function(k, v) {
     this.value = v;
 
     this.compare = that => {
-        return this.k - that.k;
+        return this.key - that.key;
     }
 
     this.getValue = () => {
@@ -31,10 +31,12 @@ let MinPq = function() {
 
     this.swim = idx => {
         let curr = idx;
-        let parent = Math.floor((idx + 1)/ 2) - 1;
+        let parent = Math.floor((curr + 1)/ 2) - 1;
         while (parent >= 0
                && this.elements[curr].compare(this.elements[parent]) < 0) {
             this.swap(curr, parent);
+            curr = parent;
+            parent = Math.floor((curr + 1)/ 2) - 1;
         }
     }
 

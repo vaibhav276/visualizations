@@ -5,13 +5,12 @@
 var globals = {
    rows: 50,
    cols: 50,
-   width: 400,
-   height: 400,
+   width: 500,
+   height: 500,
    density: 0.3,
    grid: {},
    start: undefined,
    goal: undefined,
-   // openSet: [] // TODO: Priority queue?
    openSet: new MinPq()
 };
 
@@ -80,7 +79,6 @@ var Cell = function(i, j) {
       if (i < globals.cols - 1
           && !globals.grid[i+1][j].isWall)
          res.push(globals.grid[i+1][j]);
-
       // below
       if (j < globals.rows - 1
           && !globals.grid[i][j+1].isWall)
@@ -112,19 +110,23 @@ function setup() {
    canvas.parent('sketch-holder');
 
    globals.grid = new Array(globals.cols);
-   for (let i = 0;i < globals.cols;i++) {
+   for (let i = 0; i < globals.cols; i++) {
       globals.grid[i] = new Array(globals.rows);
-      for (let j = 0;j < globals.rows;j++) {
+      for (let j = 0; j < globals.rows; j++) {
          globals.grid[i][j] = new Cell(i, j);
-         if (Math.random() < globals.density) {
-            globals.grid[i][j].setWall(true);
-         }
       }
    }
    globals.start = globals.grid[0][0];
    globals.start.setStart();
    globals.goal = globals.grid[globals.cols - 1][globals.rows - 1];
    globals.goal.setGoal();
+   for (let i = 0; i < globals.cols; i++) {
+      for (let j = 0; j < globals.rows; j++) {
+         if (Math.random() < globals.density) {
+            globals.grid[i][j].setWall(true);
+         }
+      }
+   }
 
    globals.start.setGScore(0);
    globals.start.updateHScore();
@@ -145,26 +147,27 @@ function draw() {
    }
 
    if (globals.openSet.size() === 0) {
-      console.log("Terminating. No more paths to check");
+      console.log("Terminating (No more paths to check)");
       noLoop();
       return;
    }
 
    let els = globals.openSet.getElements();
-   els.forEach(e => {
-      e.getValue().draw(color(255,204,0, 60));
-   });
+   for (let i = 0; i < els.length; i++) {
+      els[i].getValue().draw(color(255,204,0));
+   }
 
    let minElement = globals.openSet.deleteMin().getValue();
    if (minElement === globals.goal) {
-      console.log("Terminating. Found path");
+      console.log("Terminating (Found path)");
       minElement.drawPathFromStart();
       noLoop();
       return;
    }
 
    let neighbors = minElement.neighbors();
-   neighbors.forEach(function (e) {
+   for (let i = 0; i < neighbors.length; i++) {
+      let e = neighbors[i];
       let tentativeGScore = minElement.gScore + distance(minElement, e);
       if (tentativeGScore < e.gScore) {
          // This path is better than previously known. Record it
@@ -178,5 +181,5 @@ function draw() {
             e.drawPathFromStart();
          }
       }
-   });
+   }
 }
