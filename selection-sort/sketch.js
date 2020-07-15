@@ -1,76 +1,80 @@
 'use strict';
 
-// depends on 'sorter.js'
+// depends on 'selection-sort.js'
 
-let globals = {
+let g = {
    width: 800,
-   height: 200,
+   height: 450,
    numDataPoints: 100,
    minDataValue: 1,
    maxDataValue: 100,
    sorter: undefined,
-   executeToggle: false,
-   pos: -1,
+   drawQueue: []
 }
 
 function setup() {
-   let canvas = createCanvas(globals.width, globals.height);
+   let canvas = createCanvas(g.width, g.height);
    canvas.parent('sketch-holder');
 
-   globals.sorter = new Sorter();
-   let tempData = []
-   for (let i = 0; i < globals.numDataPoints; i++) {
-      tempData[i] = Math.floor(Math.random() * globals.maxDataValue)
-                  + globals.minDataValue;
-   }
-   globals.sorter.setData(tempData);
+   g.sorter = new SelectionSort();
+   g.sorter.initializeRandomData(g.numDataPoints,
+                                 g.minDataValue,
+                                 g.maxDataValue);
+   g.sorter.setOnUpdateCallback(onUpdate);
+   g.sorter.setOnDoneCallback(onDone);
+
+   noLoop();
+   g.sorter.sort(); // will call onUpdate for every display event
+   loop(); // start processing display events
+}
+
+// callback from sorter for updating UI
+function onUpdate(ev) {
+   g.drawQueue.push(ev); // push at end
+}
+
+// callback from sorter to indicate sorting is done
+function onDone() {
+   noLoop();
 }
 
 function draw() {
-   stroke(0);
-   // rect(0, 0, globals.width, globals.height);
-   let rectWidth = globals.width / globals.numDataPoints;
+   let config = g.drawQueue.shift(); // pop first
+   if (config == undefined) return;
+
+   let rectBase = g.height - 250;
+   let rectWidth = g.width / g.numDataPoints;
+   let [hlIdxMin, hlIdxMax] = config.hlIndexRange;
+   let [doneMin, doneMax] = config.doneRange;
 
    background(255);
-   if (globals.executeToggle == false) {
-      let {cost, pos1, pos2} = globals.sorter.prepareStep();
-      let fr = (globals.numDataPoints / cost) * 5;
-      frameRate(fr);
-      let data = globals.sorter.getData();
-      for (let i = 0; i < globals.numDataPoints; i++) {
-         if (i == pos1) {
-            fill('blue');
-         } else if (i == pos2) {
-            fill('red')
-         } else {
-            fill(240, 240, 240);
-         }
-         rect(i * rectWidth + 1,
-              globals.height - 1,
-              rectWidth - 3,
-              0 - data[i]*(
-                 globals.height/(globals.maxDataValue - globals.minDataValue)
-              )
-             );
+   for (let i = 0; i < config.data.length; i++) {
+      let c = color(249, 235, 165);
+      if (i >= hlIdxMin
+          && i <= hlIdxMax) {
+         c = color(153, 255, 255);
       }
-   } else {
-      globals.sorter.executeStep();
-      let data = globals.sorter.getData();
-      fill(240, 240, 240);
-      for (let i = 0; i < globals.numDataPoints; i++) {
-         rect(i * rectWidth + 1,
-              globals.height - 1,
-              rectWidth - 3,
-              0 - data[i]*(
-                 globals.height/(globals.maxDataValue - globals.minDataValue)
-              )
-             );
+      if (config.hlIndicies.includes(i)) {
+         c = color(16, 155, 165);
       }
-      globals.pos = globals.pos + 1;
+      if (i >= doneMin
+          && i <= doneMax) {
+         c = color(16, 155, 165);
+      }
+      fill(c);
+      noStroke();
+      rect(i * rectWidth + 1,
+           rectBase - 1,
+           rectWidth - 3,
+           0 - config.data[i]*(
+              rectBase / (g.maxDataValue - g.minDataValue)
+           )
+          );
    }
-   globals.executeToggle = !globals.executeToggle;
 
-   if (globals.pos >= globals.numDataPoints - 2) {
-      noLoop();
-   }
+   textSize(20);
+   fill(0);
+   text('Total (N):    ' + g.numDataPoints, 10, rectBase + 20);
+   text('Sorted:       ' + (doneMax - doneMin), 10, rectBase + 40);
+   text('Cost:         ' + config.cost, 10, rectBase + 60);
 }
