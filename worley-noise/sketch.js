@@ -3,7 +3,7 @@
 var g = {
    width: 300,
    height: 300,
-   numSeeds: 15,
+   numSeeds: 10,
    seeds: [],
    neighbor: 0, // n-th closest,
    maxDist: 0
@@ -16,11 +16,10 @@ function setup() {
    for (let i = 0; i < g.numSeeds; i++) {
       g.seeds.push(new p5.Vector(randomInt(0, g.width), randomInt(0, g.height)));
    }
-   g.maxDist = Math.sqrt(g.width*g.width + g.height*g.height) / 2;
+   g.maxDist = Math.sqrt(g.width*g.width + g.height*g.height) / 4;
 }
 
 function draw() {
-   noStroke();
    for (let i = 0; i < g.width; i++) {
       for (let j = 0; j < g.height; j++) {
          let d = [];
@@ -29,14 +28,15 @@ function draw() {
          }
          d.sort((a, b) => a - b);
          let nthNeighborDist = d[g.neighbor];
-         let cr = Math.ceil(map(nthNeighborDist, 0, g.maxDist, 200, 215));
-         let cg = Math.ceil(map(nthNeighborDist, 10, g.maxDist, 120, 170));
-         let cb = Math.ceil(map(nthNeighborDist, 0, g.maxDist, 200, 255));
+         let cr = Math.ceil(map(nthNeighborDist, 0, g.maxDist, 250, 26));
+         let cg = Math.ceil(map(nthNeighborDist, 10, g.maxDist, 250, 167));
+         let cb = Math.ceil(map(nthNeighborDist, 0, g.maxDist, 250, 250));
          stroke(cr, cg, cb);
          point(i, j);
       }
    }
-   fill(237, 173, 255);
+   noStroke();
+   fill(255, 255, 199);
    for (let i = 0; i < g.numSeeds; i++) {
       circle(g.seeds[i].x, g.seeds[i].y, 10);
    }
@@ -50,8 +50,8 @@ function randomInt(min, max) {
 
 function moveSeeds() {
    for (let i = 0; i < g.numSeeds; i++) {
-      g.seeds[i].x += randomInt(-15, 15);
-      g.seeds[i].y += randomInt(-15, 15);
+      g.seeds[i].x += randomInt(-5, 5);
+      g.seeds[i].y += randomInt(-5, 5);
       if (g.seeds[i].x < 0) g.seeds[i].x += g.width;
       if (g.seeds[i].x > g.width) g.seeds[i].x -= g.width;
       if (g.seeds[i].y < 0) g.seeds[i].y += g.height;
