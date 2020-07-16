@@ -35,26 +35,27 @@ function onUpdate(ev) {
 
 // callback from sorter to indicate sorting is done
 function onDone() {
-   noLoop();
+   g.drawQueue.push(null); // mark end of events
 }
 
 function draw() {
-   let config = g.drawQueue.shift(); // pop first
-   if (config == undefined) return;
+   let ev = g.drawQueue.shift(); // pop first
+   if (ev == undefined) return;
+   if (ev == null) noLoop();
 
    let rectBase = g.height - 250;
    let rectWidth = g.width / g.numDataPoints;
-   let [hlIdxMin, hlIdxMax] = config.hlIndexRange;
-   let [doneMin, doneMax] = config.doneRange;
+   let [hlIdxMin, hlIdxMax] = ev.hlIndexRange;
+   let [doneMin, doneMax] = ev.doneRange;
 
    background(255);
-   for (let i = 0; i < config.data.length; i++) {
+   for (let i = 0; i < ev.data.length; i++) {
       let c = color(249, 235, 165);
       if (i >= hlIdxMin
           && i <= hlIdxMax) {
          c = color(153, 255, 255);
       }
-      if (config.hlIndicies.includes(i)) {
+      if (ev.hlIndicies.includes(i)) {
          c = color(16, 155, 165);
       }
       if (i >= doneMin
@@ -66,7 +67,7 @@ function draw() {
       rect(i * rectWidth + 1,
            rectBase - 1,
            rectWidth - 3,
-           0 - config.data[i]*(
+           0 - ev.data[i]*(
               rectBase / (g.maxDataValue - g.minDataValue)
            )
           );
@@ -76,5 +77,5 @@ function draw() {
    fill(0);
    text('Total (N):    ' + g.numDataPoints, 10, rectBase + 20);
    text('Sorted:       ' + (doneMax - doneMin), 10, rectBase + 40);
-   text('Cost:         ' + config.cost, 10, rectBase + 60);
+   text('Cost:         ' + ev.cost, 10, rectBase + 60);
 }
